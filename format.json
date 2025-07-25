@@ -1,0 +1,66 @@
+{
+    "projects": [
+        {
+            "name": "Project Name",
+            "description": "Project Description",
+            "steps": [
+                {
+                    "name":"step name",
+                    "checked:": false,
+                    "substeps": [
+                        {
+                            "name": "substep name",
+                            "checked": false,
+                            "substeps": [
+                                {
+                                    "name": "substep name",
+                                    "checked": false
+                                },
+                                {
+                                    "name": "substep name",
+                                    "checked": false
+                                }
+                            ]
+                        },
+                        {
+                            "name": "substep name",
+                            "checked": false
+                        },
+                        {
+                            "name": "substep name",
+                            "checked": false
+                        }
+                    ]
+                },
+                {
+                    "name":"step name",
+                    "checked:": false,
+                    "substeps": [
+                        {
+                            "name": "substep name",
+                            "checked": false,
+                            "substeps": [
+                                {
+                                    "name": "substep name",
+                                    "checked": false
+                                },
+                                {
+                                    "name": "substep name",
+                                    "checked": false
+                                }
+                            ]
+                        },
+                        {
+                            "name": "substep name",
+                            "checked": false
+                        },
+                        {
+                            "name": "substep name",
+                            "checked": false
+                        }
+                    ]
+                }
+            ]
+        },
+    ]
+}

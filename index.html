@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SubTask</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="navbar-menu">
+            <div class="navbar-menu-item navbar-dropdown">
+                Preferences
+                <div class="navbar-options-dropdown">
+                    <button onclick="openThemeModal()">Theme</button>
+                    <button onclick="openSettingsModal()">Settings</button>
+                </div>
+            </div>
+            <div class="navbar-menu-item navbar-dropdown">
+                Help
+                <div class="navbar-options-dropdown">
+                    <button onclick="window.open('https://www.github.com', '_blank');">Source Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="panel">
+            <button class="button" id="new-project-button" onclick="createNewProject()">New Project</button>
+        </div>
+        <div id="project-list-panel">
+            <h2 id="project-list-title">Projects</h2>
+            <div id="project-list">
+            </div>
+        </div>
+    </div>
+    <div class="main" id="main-content">
+        <p>Select a project from the sidebar.</p>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+
+</html>
