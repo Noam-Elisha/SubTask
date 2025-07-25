@@ -1,6 +1,5 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, shell } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  saveData: (data) => ipcRenderer.invoke('save-data', data),
-  loadData: () => ipcRenderer.invoke('load-data')
+    openExternal: (url) => shell.openExternal(url)
 });

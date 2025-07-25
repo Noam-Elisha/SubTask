@@ -10,12 +10,19 @@ function createWindow() {
     icon: path.join(__dirname, 'icon.png'), // <-- Add this line
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
 
   win.setMenuBarVisibility(false);
   win.loadFile('index.html');
+
+  // Open all new window requests in the user's default browser
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    require('electron').shell.openExternal(url);
+    return { action: 'deny' };
+  });
 }
 
 const dataPath = path.join(app.getPath('userData'), 'data.json');
