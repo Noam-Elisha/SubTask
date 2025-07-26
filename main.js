@@ -1,12 +1,12 @@
 // filepath: d:\OneDrive\1Documents\4Websites\SubTask\main.js
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1600,
+    height: 900,
     icon: path.join(__dirname, 'icon.png'), // <-- Add this line
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -18,6 +18,7 @@ function createWindow() {
   win.setMenuBarVisibility(false);
   win.loadFile('index.html');
 
+  require('@electron/remote/main').enable(win.webContents);
   // Open all new window requests in the user's default browser
   win.webContents.setWindowOpenHandler(({ url }) => {
     require('electron').shell.openExternal(url);
@@ -44,7 +45,27 @@ ipcMain.handle('saveData', async (event, data) => {
     return true;
 });
 
-app.whenReady().then(createWindow);
+ipcMain.on('focus-fix', () => {
+    const focusedWin = BrowserWindow.getFocusedWindow();
+    if (focusedWin) {
+        focusedWin.blur();
+        focusedWin.focus();
+    }
+});
+
+ipcMain.handle('show-confirm', async (event, { message, title }) => {
+    const win = BrowserWindow.getFocusedWindow();
+    const result = await dialog.showMessageBox(win, {
+        type: 'question',
+        buttons: ['Yes', 'No'],
+        defaultId: 1,
+        cancelId: 1,
+        title: title || 'Confirm',
+        message: message || 'Are you sure?'
+    });
+    return result.response === 0; // 0 = Yes, 1 = No
+});
+
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -53,3 +74,5 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
+
+app.whenReady().then(createWindow);

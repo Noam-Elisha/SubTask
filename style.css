@@ -381,6 +381,7 @@ body {
     background: rgba(0, 0, 0, 0.2);
     z-index: 998;
     display: none;
+    pointer-events: auto;
 }
 
 .modal {
@@ -571,4 +572,12 @@ body {
     flex-wrap: wrap;
     align-items: left;
     gap: 3px;
+}
+
+.step-header-extras {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto; /* This pushes it to the right */
 }

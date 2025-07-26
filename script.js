@@ -111,7 +111,11 @@ function renderStepCard(item, parent) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = item.checked || false;
-    checkbox.onclick = (e) => e.stopPropagation();
+    checkbox.onclick = (e) => {
+        e.stopPropagation();
+        item.checked = checkbox.checked;
+        save(true); // Save without re-rendering
+    };
 
     const textSpan = document.createElement('span');
     textSpan.textContent = item.name || item.step || item;
@@ -123,6 +127,10 @@ function renderStepCard(item, parent) {
     // If no substeps, add context input and button to header (inline)
     const substeps = item.substeps || [];
     if (substeps.length === 0) {
+        // Create a container for the context input and button
+        const extrasDiv = document.createElement('div');
+        extrasDiv.className = 'step-header-extras';
+
         const contextInput = document.createElement('input');
         contextInput.type = 'text';
         contextInput.placeholder = 'Add context...';
@@ -149,8 +157,12 @@ function renderStepCard(item, parent) {
             }
         };
 
-        stepHeader.appendChild(contextInput);
-        stepHeader.appendChild(subtaskBtn);
+        // Append input and button to the extras div
+        extrasDiv.appendChild(contextInput);
+        extrasDiv.appendChild(subtaskBtn);
+
+        // Append the extras div to the step header
+        stepHeader.appendChild(extrasDiv);
     }
 
     // --- Card Body ---
@@ -231,7 +243,7 @@ async function subtaskThis(item, context) {
     // Collect ancestor step names
     let ancestors = [];
     let parent = item.parent;
-    while (parent) {
+    while (parent && parent.name) {
         ancestors.unshift(parent.name);
         parent = parent.parent;
     }
@@ -297,6 +309,10 @@ Extra instructions: ${context}`;
     }
 
     if (parsed && Array.isArray(parsed)) {
+        // Set parent property for each substep
+        parsed.forEach(substep => {
+            substep.parent = item;
+        });
         item.substeps = parsed;
         save(); // Save the updated project data
         
@@ -316,10 +332,17 @@ document.getElementById('close-all-btn').onclick = function () {
 };
 
 function createNewProject() {
-    // replace prompt with modal for inputting project name and description
+    // Remove any existing modal
+    document.querySelectorAll('.overlay').forEach((o, i) => {
+    if (i > 0) o.parentNode.removeChild(o);
+    });
+
+    document.querySelectorAll('.modal').forEach(m => m.parentNode.removeChild(m));
+    const overlay = document.getElementById('overlay');
+    overlay.style.display = 'block';
+
 
     const modal = document.createElement('div');
-    
     modal.innerHTML = `
         <div class="modal">
             <h2>Create New Project</h2>
@@ -331,6 +354,14 @@ function createNewProject() {
             <button class="button" id="cancel-project-btn">Cancel</button>
         </div>
     `;
+    document.body.appendChild(modal);
+
+    // Focus the project name input after modal is shown
+    setTimeout(() => {
+        const projectNameInput = document.getElementById('project-name');
+        if (projectNameInput) projectNameInput.focus();
+    }, 100);
+
     // Escape key closes modal
     function escListener(e) {
         if (e.key === 'Escape') {
@@ -340,11 +371,6 @@ function createNewProject() {
         }
     }
     document.addEventListener('keydown', escListener);
-
-    const overlay = document.getElementById('overlay');
-    overlay.style.display = 'block';
-
-    document.body.appendChild(modal);
 
     const createProjectBtn = document.getElementById('create-project-btn');
     createProjectBtn.onclick = () => {
@@ -431,26 +457,36 @@ function editProject(projectIndex) {
 }
 
 // Function to delete project
-function deleteProject(projectIndex) {
-    if (confirm('Are you sure you want to delete this project?')) {
+async function deleteProject(projectIndex) {
+    const confirmed = await window.electronAPI.showConfirm('Are you sure you want to delete this project?', 'Delete Project');
+    if (confirmed) {
         projectsData.splice(projectIndex, 1);
         renderSidebar();
         renderMain();
         currentProjectIndex = null; // Reset current project index
         save(); // Save the updated project data
+
+        // Refocus the window to fix input issues
+        if (window.electronAPI && window.electronAPI.focusWindow) {
+            setTimeout(() => window.electronAPI.focusWindow(), 100);
+        }
     }
 }
 
-async function save() {
+async function save(skipRender = false) {
     try {
+        // Remove parent refs before saving
+        stripParent(projectsData);
         await window.electronAPI.saveData({ projects: projectsData });
-        renderSidebar();
-        if (currentProjectIndex != null) {
-            const oldProjectIndex = currentProjectIndex;
-            currentProjectIndex = null;
-            showProject(oldProjectIndex);
-        } else {
-            renderMain();
+        if (!skipRender) {
+            renderSidebar();
+            if (currentProjectIndex != null) {
+                const oldProjectIndex = currentProjectIndex;
+                currentProjectIndex = null;
+                showProject(oldProjectIndex);
+            } else {
+                renderMain();
+            }
         }
         return true;
     } catch (error) {
@@ -458,7 +494,6 @@ async function save() {
         return false;
     }
 }
-
 
 
 function observeDropdownVisibility(dropdown) {
@@ -767,4 +802,19 @@ function adjustProjectListMinHeight() {
     });
     // Set min-height to totalHeight + 100px
     projectList.style.minHeight = (totalHeight + 100) + 'px';
+}
+
+function stripParent(obj) {
+    if (Array.isArray(obj)) {
+        obj.forEach(stripParent);
+    } else if (obj && typeof obj === 'object') {
+        delete obj.parent;
+        if (Array.isArray(obj.substeps)) {
+            obj.substeps.forEach(stripParent);
+        }
+        // If you use "steps" at the project root, handle that too:
+        if (Array.isArray(obj.steps)) {
+            obj.steps.forEach(stripParent);
+        }
+    }
 }
