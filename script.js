@@ -208,12 +208,11 @@ function renderStepCard(item, parent) {
 
 // Placeholder for your API call
 async function subtaskThis(item, context) {
-    const apiKey = ''; // Replace with your actual key
+    const apiKey = localStorage.getItem('openai_api_key') || '';
     const endpoint = 'https://api.openai.com/v1/chat/completions';
 
     // check if api key is set
     if (!apiKey) {
-        console.error('API key is not set. Please set your OpenAI API key.');
         alert('API key is not set. Please set your OpenAI API key.');
         return;
     }
@@ -248,7 +247,8 @@ Extra instructions: ${context}`;
     if (promptTxtResponse.ok) {
         systemPrompt = await promptTxtResponse.text();
     } else {
-        throw new Error('Could not load system_prompt.txt');
+        alert('Could not load system_prompt.txt');
+        return;
     }
 
 
@@ -275,7 +275,7 @@ Extra instructions: ${context}`;
 
     if (!response.ok) {
         let errText = await response.text();
-        throw new Error('OpenAI API error: ' + errText);
+        alert('OpenAI API error: ' + errText);
     }
 
     const json = await response.json();
@@ -292,16 +292,16 @@ Extra instructions: ${context}`;
         if (match) {
             parsed = JSON.parse(match[0]);
         } else {
-            throw new Error('Could not parse substeps from response');
+            alert('Could not parse substeps from response');
         }
     }
 
-    if (parsed && Array.isArray(parsed.substeps)) {
-        item.substeps = parsed.substeps;
+    if (parsed && Array.isArray(parsed)) {
+        item.substeps = parsed;
         save(); // Save the updated project data
         
     } else {
-        throw new Error('No substeps found in response');
+        alert('No substeps found in response. Received:\n' + content);
     }
     
 }
@@ -437,6 +437,7 @@ function deleteProject(projectIndex) {
         renderSidebar();
         renderMain();
         currentProjectIndex = null; // Reset current project index
+        save(); // Save the updated project data
     }
 }
 

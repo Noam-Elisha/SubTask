@@ -27,15 +27,21 @@ function createWindow() {
 
 const dataPath = path.join(app.getPath('userData'), 'data.json');
 
-ipcMain.handle('save-data', async (event, data) => {
-  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-  return true;
+ipcMain.handle('loadData', async () => {
+    try {
+        if (!fs.existsSync(dataPath)) {
+            fs.writeFileSync(dataPath, JSON.stringify({ projects: [] }, null, 2));
+        }
+        const data = fs.readFileSync(dataPath, 'utf-8');
+        return JSON.parse(data);
+    } catch (err) {
+        return { projects: [] };
+    }
 });
 
-ipcMain.handle('load-data', async () => {
-  if (!fs.existsSync(dataPath)) return { projects: [] };
-  const raw = fs.readFileSync(dataPath, 'utf-8');
-  return JSON.parse(raw);
+ipcMain.handle('saveData', async (event, data) => {
+    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+    return true;
 });
 
 app.whenReady().then(createWindow);
